@@ -1,0 +1,6 @@
+{
+  "name": "點餐系統",
+  "description": "包含顧客點餐、廚房後台、櫃台結帳的手機點餐系統，具備日式簡約風格。",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
