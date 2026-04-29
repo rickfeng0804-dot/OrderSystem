@@ -6,6 +6,8 @@ export interface MenuItem {
   category: string;
   name: string;
   price: number;
+  isSoldOut?: boolean;
+  description?: string;
   sizes: SizeOption[];
   addOns: AddOnOption[];
   image?: string;

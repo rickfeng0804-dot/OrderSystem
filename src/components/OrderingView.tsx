@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CATEGORIES, mockMenu } from '../data';
 import { MenuItem, OrderItem, SizeOption, AddOnOption } from '../types';
 import { ShoppingCart, Plus, Minus, X, Check, QrCode, ScanLine } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface OrderingViewProps {
   storeName: string;
@@ -18,6 +19,8 @@ export default function OrderingView({ storeName, storeLogo, activeTables, onSub
   const [showScanner, setShowScanner] = useState(false);
   const [toastMessage, setToastMessage] = useState<{title: string, desc: string} | null>(null);
   const [addedFeedback, setAddedFeedback] = useState(false);
+
+  const [justAddedItemId, setJustAddedItemId] = useState<string | null>(null);
 
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [selectedSize, setSelectedSize] = useState<SizeOption | null>(null);
@@ -50,8 +53,8 @@ export default function OrderingView({ storeName, storeLogo, activeTables, onSub
     };
     setCart([...cart, newItem]);
     
-    setToastMessage({ title: '已加入購物車', desc: `${item.name} x1` });
-    setTimeout(() => setToastMessage(null), 2000);
+    setJustAddedItemId(item.id);
+    setTimeout(() => setJustAddedItemId(null), 2000);
   };
 
   const handleRemoveFromCart = (id: string) => {
@@ -245,23 +248,40 @@ export default function OrderingView({ storeName, storeLogo, activeTables, onSub
         {filteredMenu.map(item => (
           <div 
             key={item.id} 
-            onClick={() => handleOpenItemEditor(item)}
-            className="flex justify-between items-center bg-transparent border-b border-[#F0EBE3] pb-3 cursor-pointer active:scale-[0.98] transition-transform"
+            onClick={item.isSoldOut ? undefined : () => handleOpenItemEditor(item)}
+            className={`group flex justify-between items-center bg-transparent border-b border-[#F0EBE3] pb-3 transition-transform ${item.isSoldOut ? 'opacity-50 grayscale cursor-not-allowed' : 'cursor-pointer active:scale-[0.98]'}`}
           >
-            <div className="w-16 h-16 bg-[#F5F2ED] rounded-xl flex items-center justify-center text-3xl shadow-inner border border-[#DED9D1]/50 shrink-0">
+            <div className="w-16 h-16 bg-[#F5F2ED] rounded-xl flex items-center justify-center text-3xl shadow-inner border border-[#DED9D1]/50 shrink-0 relative overflow-hidden">
               {item.image}
+              {item.isSoldOut && (
+                <div className="absolute inset-0 bg-black/10"></div>
+              )}
             </div>
             <div className="flex-1 px-4">
-              <p className="font-medium text-[#1A1A1A]">{item.name}</p>
-              <p className="text-xs text-gray-400 mt-1 italic">{item.category}・特製</p>
-              <p className="text-sm mt-1 font-bold text-[#BC2732]">${item.price}</p>
+              <p className={`font-medium ${item.isSoldOut ? 'text-gray-500 line-through' : 'text-[#1A1A1A]'}`}>{item.name}</p>
+              {item.description && <p className={`text-xs mt-1 line-clamp-2 ${item.isSoldOut ? 'text-gray-400' : 'text-gray-500'}`}>{item.description}</p>}
+              <div className="flex items-center mt-1">
+                <p className={`text-sm font-bold ${item.isSoldOut ? 'text-gray-400' : 'text-[#BC2732]'}`}>${item.price}</p>
+                {justAddedItemId === item.id && (
+                  <span className="ml-3 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full animate-in slide-in-from-left-2 fade-in shadow-sm">
+                    已加入購物車
+                  </span>
+                )}
+              </div>
             </div>
-            <button 
-              onClick={(e) => handleQuickAdd(e, item)}
-              className="w-10 h-10 bg-[#F5F2ED] rounded-full flex items-center justify-center text-xl font-bold text-[#333333] shrink-0 active:scale-95 transition-transform"
-            >
-              <Plus size={20} />
-            </button>
+            {item.isSoldOut ? (
+              <div className="px-3 py-1 bg-gray-200 rounded-full text-xs font-bold text-gray-500 shrink-0 tracking-widest">
+                售完
+              </div>
+            ) : (
+              <button 
+                onClick={(e) => handleQuickAdd(e, item)}
+                 className="flex items-center gap-1.5 px-3 h-8 bg-[#F5F2ED] hover:bg-[#333333] hover:text-white rounded-full text-xs font-bold text-[#333333] shrink-0 active:scale-95 transition-all shadow-sm opacity-100 translate-x-0 md:opacity-0 md:-translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"
+              >
+                <Plus size={14} />
+                <span>快速加入</span>
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -273,7 +293,8 @@ export default function OrderingView({ storeName, storeLogo, activeTables, onSub
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold tracking-tight text-[#1A1A1A]">{selectedItem.name}</h2>
-                <p className="text-lg font-bold text-[#BC2732] mt-1">${selectedItem.price}</p>
+                {selectedItem.description && <p className="text-sm text-gray-500 mt-2 leading-relaxed w-11/12">{selectedItem.description}</p>}
+                <p className="text-lg font-bold text-[#BC2732] mt-2">${selectedItem.price}</p>
               </div>
               
               <div className="flex items-center gap-3">
@@ -397,35 +418,51 @@ export default function OrderingView({ storeName, storeLogo, activeTables, onSub
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {cart.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4">
-                  <ShoppingCart size={48} className="opacity-20" />
-                  <p>購物車是空的</p>
-                </div>
-              ) : (
-                cart.map(item => (
-                  <div key={item.id} className="bg-white p-4 rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-[#F0EBE3]">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-bold text-[#1A1A1A]">{item.name}</h4>
-                      <div className="flex items-center gap-3">
-                        <p className="font-bold text-[#BC2732]">${item.subtotal}</p>
-                        <button 
-                          onClick={() => handleRemoveFromCart(item.id)}
-                          className="w-7 h-7 flex items-center justify-center rounded-full bg-[#FAF9F6] text-[#8C7B6C] hover:text-[#BC2732] hover:bg-[#F5F2ED] transition-colors"
-                        >
-                          <X size={14} />
-                        </button>
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+              <AnimatePresence mode="popLayout">
+                {cart.length === 0 ? (
+                  <motion.div 
+                    key="empty"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4 my-auto"
+                  >
+                    <ShoppingCart size={48} className="opacity-20" />
+                    <p>購物車是空的</p>
+                  </motion.div>
+                ) : (
+                  cart.map(item => (
+                    <motion.div 
+                      key={item.id} 
+                      layout
+                      initial={{ opacity: 0, x: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -50, scale: 0.9 }}
+                      transition={{ duration: 0.2 }}
+                      className="bg-white p-4 rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-[#F0EBE3] w-full"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-bold text-[#1A1A1A]">{item.name}</h4>
+                        <div className="flex items-center gap-3">
+                          <p className="font-bold text-[#BC2732]">${item.subtotal}</p>
+                          <button 
+                            onClick={() => handleRemoveFromCart(item.id)}
+                            className="w-7 h-7 flex items-center justify-center rounded-full bg-[#FAF9F6] text-[#8C7B6C] hover:text-[#BC2732] hover:bg-[#F5F2ED] transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-sm text-gray-500 space-y-1">
-                      <p>尺寸: {item.size}</p>
-                      {item.addOns.length > 0 && <p>加料: {item.addOns.join(', ')}</p>}
-                      <p className="text-[#333333] bg-[#F5F2ED] inline-block px-2 py-0.5 rounded mt-2 font-medium">數量: x{item.qty}</p>
-                    </div>
-                  </div>
-                ))
-              )}
+                      <div className="text-sm text-gray-500 space-y-1">
+                        <p>尺寸: {item.size}</p>
+                        {item.addOns.length > 0 && <p>加料: {item.addOns.join(', ')}</p>}
+                        <p className="text-[#333333] bg-[#F5F2ED] inline-block px-2 py-0.5 rounded mt-2 font-medium">數量: x{item.qty}</p>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </AnimatePresence>
             </div>
 
             {cart.length > 0 && (

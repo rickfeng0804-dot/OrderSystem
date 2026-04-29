@@ -110,6 +110,25 @@ export default function SettingsView({ storeName, setStoreName, storeLogo, setSt
           <p className="text-sm text-gray-600 mb-4 leading-relaxed">
             目前的圖片上傳將圖檔轉換為 <strong>Base64 字串</strong>在前端預覽。若要將設定與訂單長期儲存至 Google Sheets（無須使用正規後端），可按以下步驟落實：
           </p>
+
+          <div className="bg-[#1A1A1A] p-4 rounded-xl mb-6 overflow-x-auto">
+            <pre className="text-xs text-[#E1E1E1] font-mono leading-relaxed">
+{`{
+  // 傳送的 JSON 資料結構範例
+  "storeName": "雅・和食処",
+  "logoBase64": "data:image/jpeg;base64,/9j/4AAQ...",
+  "orderId": "ord_123456",
+  "tableNumber": 5,
+  "items": [
+    { "name": "豚骨拉麵", "qty": 1, "size": "加大", "subtotal": 220 }
+  ],
+  "totalAmount": 220,
+  "status": "處理中",
+  "timestamp": "2024-03-20T12:00:00.000Z"
+}`}
+            </pre>
+          </div>
+
           <ol className="list-decimal pl-5 text-sm space-y-3 text-gray-600 marker:font-bold marker:text-gray-400">
             <li>
               建立一個 Google Sheet，第一列設定表頭（例如：<code className="bg-white px-1.5 py-0.5 rounded border border-[#DED9D1] text-xs">StoreName</code>, <code className="bg-white px-1.5 py-0.5 rounded border border-[#DED9D1] text-xs">LogoBase64</code>）。

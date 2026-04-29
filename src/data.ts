@@ -6,6 +6,7 @@ export const mockMenu: MenuItem[] = [
     category: '麵類',
     name: '特製豚骨拉麵',
     price: 180,
+    description: '濃郁豬骨熬製高湯，搭配軟嫩叉燒與蔥花。',
     sizes: [
       { name: '正常', priceModifier: 0 },
       { name: '大碗', priceModifier: 30 }
@@ -22,6 +23,7 @@ export const mockMenu: MenuItem[] = [
     category: '麵類',
     name: '柚子鹽味拉麵',
     price: 190,
+    description: '清爽柚子香氣點綴的雞高湯底，口感層次豐富。',
     sizes: [
       { name: '正常', priceModifier: 0 },
       { name: '大碗', priceModifier: 30 }
@@ -37,6 +39,8 @@ export const mockMenu: MenuItem[] = [
     category: '飯類',
     name: '炙燒叉燒飯',
     price: 120,
+    isSoldOut: true,
+    description: '特製醬汁滷製叉燒肉，大火炙燒逼出迷人油脂香氣。',
     sizes: [
       { name: '小', priceModifier: 0 },
       { name: '大', priceModifier: 40 }
@@ -51,6 +55,7 @@ export const mockMenu: MenuItem[] = [
     category: '小菜',
     name: '日式唐揚雞',
     price: 100,
+    description: '外酥內嫩的日式炸雞塊，現點現炸多汁美味。',
     sizes: [
       { name: '正常', priceModifier: 0 }
     ],
@@ -65,6 +70,7 @@ export const mockMenu: MenuItem[] = [
     category: '湯類',
     name: '味噌湯',
     price: 40,
+    description: '採用傳統日式紅味噌熬製，暖胃首選。',
     sizes: [
       { name: '正常', priceModifier: 0 }
     ],
@@ -76,6 +82,7 @@ export const mockMenu: MenuItem[] = [
     category: '套餐',
     name: '拉麵唐揚雞套餐',
     price: 260,
+    description: '經典豚骨拉麵搭配香酥唐揚雞的超值雙饗組合。',
     sizes: [
       { name: '正常', priceModifier: 0 }
     ],
