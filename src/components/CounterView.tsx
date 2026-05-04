@@ -85,7 +85,10 @@ export default function CounterView({ orders, onUpdateStatus }: CounterViewProps
               {tableOrders.map(order => (
                 <div key={order.orderId} className="bg-[#444] rounded-2xl p-5">
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-sm text-gray-400 font-mono">{new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-red-400 font-bold">序號: {order.pickupNumber}</span>
+                      <span className="text-sm text-gray-400 font-mono">{new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
                     <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded tracking-widest ${order.status === '待結帳' ? 'bg-gray-200 text-gray-600' : 'bg-red-50 text-red-600'}`}>
                       {order.status}
                     </span>

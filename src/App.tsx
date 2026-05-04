@@ -19,15 +19,28 @@ export default function App() {
   const [storeLogo, setStoreLogo] = useState(DEFAULT_LOGO);
 
   const handleSubmitOrder = (tableNumber: number, items: OrderItem[], totalAmount: number) => {
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+    
+    // Calculate daily sequence
+    const todayStart = now.toISOString().slice(0, 10);
+    const todayOrdersCount = orders.filter(o => o.timestamp.startsWith(todayStart)).length;
+    const sequenceStr = String(todayOrdersCount + 1).padStart(3, '0');
+    const tableStr = String(tableNumber).padStart(2, '0');
+    
+    const pickupNumber = `${dateStr}${tableStr}${sequenceStr}`;
+
     const newOrder: Order = {
       orderId: Math.random().toString(36).substring(7),
       tableNumber,
       items,
       totalAmount,
       status: '製作中',
-      timestamp: new Date().toISOString()
+      timestamp: now.toISOString(),
+      pickupNumber
     };
     setOrders([...orders, newOrder]);
+    return pickupNumber;
   };
 
   const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {

@@ -31,7 +31,7 @@ export default function KitchenView({ orders, onUpdateStatus }: KitchenViewProps
             <div key={order.orderId} className="border border-[#F0EBE3] rounded-2xl p-5 bg-white shadow-sm flex flex-col">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <span className="font-bold text-xl text-[#1A1A1A]">#{order.orderId.substring(0,4)} (桌 {String(order.tableNumber).padStart(2, '0')})</span>
+                  <span className="font-bold text-xl text-[#1A1A1A]">序號: {order.pickupNumber} (桌 {String(order.tableNumber).padStart(2, '0')})</span>
                 </div>
                 <div className="text-right">
                   <span className="text-sm text-stone-500 font-mono">{new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>

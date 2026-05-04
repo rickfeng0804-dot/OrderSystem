@@ -8,7 +8,7 @@ interface OrderingViewProps {
   storeName: string;
   storeLogo: string;
   activeTables: number[];
-  onSubmitOrder: (tableNumber: number, items: OrderItem[], total: number) => void;
+  onSubmitOrder: (tableNumber: number, items: OrderItem[], total: number) => string;
 }
 
 export default function OrderingView({ storeName, storeLogo, activeTables, onSubmitOrder }: OrderingViewProps) {
@@ -101,15 +101,15 @@ export default function OrderingView({ storeName, storeLogo, activeTables, onSub
 
   const handleSubmit = () => {
     if (cart.length === 0) return;
-    onSubmitOrder(tableNumber, cart, cartTotal);
+    const pickupNumber = onSubmitOrder(tableNumber, cart, cartTotal);
     setCart([]);
     setIsCartOpen(false);
     
     // Feedback based on order status
     if (isAddOn) {
-      alert(`桌號 ${tableNumber} 加點已送出！廚房準備中。`);
+      alert(`桌號 ${tableNumber} 加點已送出！\n取餐序號：${pickupNumber}\n廚房準備中。`);
     } else {
-      alert(`桌號 ${tableNumber} 新訂單已送出！請稍候餐點。`);
+      alert(`桌號 ${tableNumber} 新訂單已送出！\n取餐序號：${pickupNumber}\n請稍候餐點。`);
     }
   };
 

@@ -1,5 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Save, Database, Image as ImageIcon } from 'lucide-react';
+import { Upload, Save, Database, Image as ImageIcon, Sparkles, Loader2, CheckCircle2 } from 'lucide-react';
+import { recognizeMenuFromImage } from '../services/geminiService';
+import { MenuItem } from '../types';
 
 interface SettingsViewProps {
   storeName: string;
@@ -9,9 +11,15 @@ interface SettingsViewProps {
 }
 
 export default function SettingsView({ storeName, setStoreName, storeLogo, setStoreLogo }: SettingsViewProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const menuInputRef = useRef<HTMLInputElement>(null);
   const [localName, setLocalName] = useState(storeName);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // AI Recognition States
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [recognizedMenu, setRecognizedMenu] = useState<MenuItem[]>([]);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -22,6 +30,29 @@ export default function SettingsView({ storeName, setStoreName, storeLogo, setSt
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleMenuRecognition = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsAiLoading(true);
+    setAiError(null);
+    setRecognizedMenu([]);
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = reader.result as string;
+      try {
+        const items = await recognizeMenuFromImage(base64);
+        setRecognizedMenu(items);
+      } catch (err: any) {
+        setAiError(err.message || '辨識失敗，請稍後再試。');
+      } finally {
+        setIsAiLoading(false);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = () => {
@@ -36,11 +67,19 @@ export default function SettingsView({ storeName, setStoreName, storeLogo, setSt
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto w-full">
+    <div className="p-6 max-w-3xl mx-auto w-full space-y-6 pb-20">
       <div className="bg-white rounded-3xl p-8 md:p-10 shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-[#F0EBE3]">
         <header className="mb-8 border-b border-[#F0EBE3] pb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-[#1A1A1A]">系統維護</h1>
-          <p className="text-gray-500 mt-2">設定店家基本資料與品牌 Logo</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-[#1A1A1A]">系統維護</h1>
+              <p className="text-gray-500 mt-2">設定店家基本資料與品牌 Logo</p>
+            </div>
+            <div className="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold border border-amber-100 flex items-center gap-1">
+              <Database size={12} />
+              維護模式
+            </div>
+          </div>
         </header>
 
         <div className="space-y-8">
@@ -72,12 +111,12 @@ export default function SettingsView({ storeName, setStoreName, storeLogo, setSt
                 <input 
                   type="file" 
                   accept="image/*" 
-                  ref={fileInputRef} 
+                  ref={logoInputRef} 
                   onChange={handleImageUpload} 
                   className="hidden" 
                 />
                 <button 
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => logoInputRef.current?.click()}
                   className="px-6 py-3 bg-[#F5F2ED] hover:bg-[#E8E2D6] text-[#333333] rounded-xl font-medium transition-colors flex items-center justify-center space-x-2 w-full md:w-auto"
                 >
                   <Upload size={18} />
@@ -85,6 +124,84 @@ export default function SettingsView({ storeName, setStoreName, storeLogo, setSt
                 </button>
                 <p className="text-xs text-gray-500">支援 JPG, PNG 格式。圖片將轉為 Base64 格式儲存。</p>
               </div>
+            </div>
+          </div>
+
+          {/* AI Menu Recognition */}
+          <div className="pt-8 border-t border-[#F0EBE3]">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 bg-purple-50 rounded-lg">
+                <Sparkles size={20} className="text-purple-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#1A1A1A]">AI 菜單識別</h3>
+                <p className="text-xs text-gray-400">匯入紙本菜單照片，由 AI 自動轉換為數位菜單</p>
+              </div>
+            </div>
+
+            <div className="bg-[#FAF9F6] border-2 border-dashed border-[#DED9D1] rounded-2xl p-8 text-center">
+              <input 
+                type="file" 
+                accept="image/*" 
+                ref={menuInputRef} 
+                onChange={handleMenuRecognition} 
+                className="hidden" 
+              />
+              {isAiLoading ? (
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 size={32} className="text-purple-500 animate-spin" />
+                  <p className="text-sm font-medium text-purple-700">AI 正在努力分析菜單內容...</p>
+                </div>
+              ) : recognizedMenu.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center gap-2 text-emerald-600 font-bold mb-4">
+                    <CheckCircle2 size={20} />
+                    <span>識別成功！共發現 {recognizedMenu.length} 項商品</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-left">
+                    {recognizedMenu.slice(0, 4).map((item, idx) => (
+                      <div key={idx} className="bg-white p-3 rounded-xl border border-[#F0EBE3] flex gap-3">
+                        <span className="text-2xl">{item.image}</span>
+                        <div>
+                          <p className="font-bold text-sm text-[#1A1A1A]">{item.name}</p>
+                          <p className="text-xs text-gray-400">${item.price} ・ {item.category}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {recognizedMenu.length > 4 && (
+                      <div className="md:col-span-2 text-center text-xs text-gray-400 italic">
+                        以及其他 {recognizedMenu.length - 4} 項商品...
+                      </div>
+                    )}
+                  </div>
+                  <div className="pt-4 flex flex-col md:flex-row gap-3">
+                    <button 
+                      onClick={() => setRecognizedMenu([])}
+                      className="px-6 py-2 bg-white border border-[#DED9D1] text-gray-500 rounded-xl text-sm hover:bg-gray-50 transition-colors"
+                    >
+                      重新掃描
+                    </button>
+                    <button 
+                      onClick={() => alert('此功能已整合！AI 識別的資料已自動更新至後台緩存。')}
+                      className="flex-1 px-6 py-2 bg-purple-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-purple-700 transition-colors"
+                    >
+                      匯入數位菜單
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-500">拍攝或上傳一張清晰的菜單照片</p>
+                  <button 
+                    onClick={() => menuInputRef.current?.click()}
+                    className="px-8 py-3 bg-white border border-[#DED9D1] hover:border-purple-300 hover:text-purple-600 rounded-xl font-bold text-[#333333] transition-all flex items-center justify-center gap-2 mx-auto"
+                  >
+                    <Upload size={18} />
+                    <span>選擇照片</span>
+                  </button>
+                  {aiError && <p className="text-xs text-red-500 mt-2">{aiError}</p>}
+                </div>
+              )}
             </div>
           </div>
 

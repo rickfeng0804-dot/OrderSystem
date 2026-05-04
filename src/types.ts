@@ -32,4 +32,5 @@ export interface Order {
   totalAmount: number;
   status: OrderStatus;
   timestamp: string;
+  pickupNumber: string;
 }
